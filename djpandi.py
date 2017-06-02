@@ -29,7 +29,7 @@ class Command(object):
     music = "music"
 
 # instantiate Slack & Twilio clients
-slack_client = SlackClient('xoxb-191291302739-3ZcVJx4QiTsxupMYsiFz1xXw')
+slack_client = SlackClient('xoxb-191291302739-AHrAH5Q6ZZ9uRcaGJGqq783X')
 
 def returnPlayList():
     response = "https://open.spotify.com/user/12141837005/playlist/55GfcCkX2hHFyFkoLwkMJE"
@@ -70,22 +70,23 @@ def vote(cmd):
 
 
 def addMusic(query):
-    print query
 
     query = "".join(query.split('suggest')[1:])
+    spToken = spotipy.oauth2.SpotifyClientCredentials(SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET)
 
-    print query
-    sp = spotipy.Spotify(auth="BQChkvEBlXHHSzRqpS13xAO0fO4rySIlI7pbYOCTk-WCQmISRrBOBKyDNg_igY5VsNNJvExZjplJ4_WfY8OV4ZB_--foelGrtH0LBle_hgUxErSHGlQUMg1OZQ2SywJdoirIsLEqxuR683FngENhjIFEONn7GcUeK9KPfmHSd3F_-LzrZPwxHJI-sEx2vnOP0gIMWr_042i6O0SQOqGVjjhHGzG9IJif8ZgcDCQ_")
+    authToken = "BQD79Ij0Lcy0_PKrZlLSePhS37HcP1ndN-uaEXliI82XKa_bBLdKykWsyJKUAVW-qCZWVaeDb-Ml4KW6DC1JCTNyxKTN4ni0yAa5v1jNqRWrMi_tw5GknTSU4HSs0qcqiup8wQaMEmrBOkBmKu174Y4v-E16s5HmBgcnJVD8sKiWYvG8zGWTqpflWqDGskrGhT0Qa-OGK7-4MxMXs4dODzfVuyaOJJzZRKibRC9O"
+
+    sp = spotipy.Spotify(auth=authToken)
     sp.trace = False
 
     searchResult = sp.search(query, limit=1, type='track')
-    print suggestionPool
     global nextSongId
     if searchResult:
         songInfo = searchResult['tracks']['items'][0]
 
         name = songInfo["name"]
         artist = songInfo['artists'][0]['name']
+        uri = songInfo['uri']
 
         if name in suggestionPool:
             pass
@@ -93,13 +94,36 @@ def addMusic(query):
             suggestionPool[name] = {
                 'id': nextSongId,
                 'artist': artist,
-                'votes': 0
+                'votes': 0,
+                'uri': uri
             }
             nextSongId += 1
         return "Your request has been accepted. \n({})".format(eightBall())
     else:
         return "I can't find the song you request for"
-    #results = sp.user_playlist_add_tracks(username, playlist_id, [searchResult['tracks']['items'][0]['uri']])
+
+def addSongToPlaylist(trackUri):
+
+    sp = spotipy.Spotify(auth="BQD3AAb_TrEzG5XE_we_Y7E8JY0cONpWUGVM4ehs57hxmUOeDBkBPG3pSn9cG6fyS69kCwYa-PNwhxtrXRvQQxlchdUCtP6LWf806XMAysyrW1AJwOdNZZrXgUOam-DVUHRcS0QAO2Maevc9WndkpV5Jq6SDj_AwCxRvj2SAF-gyRp7WJLgBHptdYYTKIP1mOuqiwICLlZsMgjIHfCKEKlOmveQjaGFXdZ6ojHIH")
+    sp.trace = False
+    playlist_id = "55GfcCkX2hHFyFkoLwkMJE"
+
+    if trackUri:
+        sp.user_playlist_add_tracks(username, playlist_id, [trackUri])
+
+def create_final_playlist():
+    tempMaxVote = -1
+    mostVoted = ""
+    for song in suggestionPool.keys():
+        if suggestionPool[song]['votes'] > tempMaxVote:
+            tempMaxVote = suggestionPool[song]['votes']
+            mostVoted = song
+    
+    addSongToPlaylist(suggestionPool[mostVoted]["uri"])
+    response = "The winner is: {}".format(mostVoted)
+    return response
+
+ #results = sp.user_playlist_add_tracks(username, playlist_id, [searchResult['tracks']['items'][0]['uri']])
 
 def handle_command(command, channel):
     """
@@ -110,6 +134,8 @@ def handle_command(command, channel):
     response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
                "* command with numbers, delimited by spaces."
     
+    
+    
     if command.startswith(Command.music):
         response = returnPlayList()
     elif command.startswith(Command.add):
@@ -118,6 +144,8 @@ def handle_command(command, channel):
         response = showExisting()
     elif command.startswith("vote"):
         response = vote(command)
+    elif command.startswith("letsparty"):
+        response = create_final_playlist()
 
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
@@ -140,7 +168,7 @@ def parse_slack_output(slack_rtm_output):
 
 
 if __name__ == "__main__":
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+    READ_WEBSOCKET_DELAY = 0.25 # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
         while True:
