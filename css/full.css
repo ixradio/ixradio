@@ -1,0 +1,45 @@
+/*
+ * Start Bootstrap - Full (http://startbootstrap.com/)
+ * Copyright 2013-2016 Start Bootstrap
+ * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap/blob/gh-pages/LICENSE)
+ */
+
+body {
+    
+}
+
+/* Header Image Background - Change the URL below to your image path (example: ../images/background.jpg) */
+
+.full {
+    background: url('./../bg1.jpg') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
+#player {
+	margin-left: 30% ;
+    width: 50%;
+    padding: 10px;
+    
+}
+
+#banner {
+	padding-top: 20px;
+	color: white;
+	font-size: 30px;
+}
+
+#title {
+	margin-top: 2%;
+	margin-left: 38%;
+	width: 25%;
+	position: relative;
+}
+
+#text {
+	margin: auto;
+    width: 50%;
+    padding: 10px;
+}
